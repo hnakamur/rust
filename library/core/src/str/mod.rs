@@ -2351,6 +2351,42 @@ impl str {
         }
     }
 
+    /// Returns the number of bytes for the encoded UTF-8 character
+    /// at the index.
+    ///
+    /// That number of bytes is always between 1 and 4, inclusive.
+    ///
+    /// Panics if `index` is not on a UTF-8 code point boundary, or if it is
+    /// past the end of the last code point of the string slice.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// let s = "\u{0024}\u{00A2}\u{20AC}\u{10348}";
+    /// assert_eq!(s.len_utf8_at(0), 1);
+    /// assert_eq!(s.len_utf8_at(1), 2);
+    /// assert_eq!(s.len_utf8_at(3), 3);
+    /// assert_eq!(s.len_utf8_at(6), 4);
+    /// ```
+    #[unstable(feature = "len_utf8_at", issue="none")]
+    #[inline]
+    pub fn len_utf8_at(&self, index: usize) -> usize {
+        let b = self.as_bytes()[index];
+        if b & 0b1000_0000 == 0 {
+            1
+        } else if b & 0b1110_0000u8 == 0b1100_0000u8 {
+            2
+        } else if b & 0b1111_0000u8 == 0b1110_0000u8 {
+            3
+        } else if b & 0b1111_1000u8 == 0b1111_0000u8 {
+            4
+        } else {
+            panic!("index not at char boundary: {}", index);
+        }
+    }
+
     /// Converts a string slice to a byte slice. To convert the byte slice back
     /// into a string slice, use the [`from_utf8`] function.
     ///
